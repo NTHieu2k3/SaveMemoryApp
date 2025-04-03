@@ -23,6 +23,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "The app needs access your camera in order to take photos of your memories."
+        }
+      ],
+      "expo-sqlite"
+    ]
   }
 }
