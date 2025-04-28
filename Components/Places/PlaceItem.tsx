@@ -1,11 +1,17 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Colors } from "../../constants/colors";
+import { Memory } from "../../Models/memory";
 
-function PlaceItem({ onSelect, memory }) {
+interface ItemProps{
+  readonly onSelect : (id: string) => void
+  readonly memory: Memory
+}
+
+function PlaceItem({ onSelect, memory }: ItemProps) {
   return (
     <Pressable
       style={({ pressed }) => [styles.item, pressed && styles.pressed]}
-      onPress={onSelect.bind(this, memory.id)}
+      onPress={() => onSelect( memory.id)}
     >
       <Image style={styles.image} source={{ uri: memory.imageUri }} />
       <View style={styles.info}>

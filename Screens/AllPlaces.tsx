@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 
 import PlacesList from "../Components/Places/PlacesList";
 import { fetchMemories } from "../utill/database";
+import { Memory } from "../Models/memory";
 
-function AllPlaces({ route }) {
-  const [loadedMemories, setLoadedMemories] = useState([]);
+function AllPlaces() {
+  const [loadedMemories, setLoadedMemories] = useState<Memory[]>([]);
   const isFocused = useIsFocused();
 
   useEffect(() => {

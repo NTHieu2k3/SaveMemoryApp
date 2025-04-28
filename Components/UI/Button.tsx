@@ -1,7 +1,12 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 import { Colors } from "../../constants/colors";
 
-function Button({ onPress, children }) {
+interface ButtonProps{
+  readonly onPress : () => void
+  readonly children : string
+}
+
+function Button({ onPress, children }: ButtonProps) {
   return (
     <Pressable
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
@@ -22,7 +27,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary800,
     elevation: 2,
     shadowColor: "black",
-    shadowOpacity: "0.15",
+    shadowOpacity: 0.5,
     shadowOffset: { width: 1, height: 1 },
     shadowRadius: 2,
     borderRadius: 4,

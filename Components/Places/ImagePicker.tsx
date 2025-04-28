@@ -8,41 +8,56 @@ import { Alert, Image, Linking, StyleSheet, Text, View } from "react-native";
 import { Colors } from "../../constants/colors";
 import OutlineButton from "../UI/OutlineButton";
 
-function ImagePicker({ onTakenImage }) {
-  const [pickedImage, setPickedImage] = useState();
+interface ImagePickerProps {
+  readonly onTakenImage: (imageUri: string) => void;
+}
+
+function ImagePicker({ onTakenImage }: ImagePickerProps) {
+  const [pickedImage, setPickedImage] = useState<string>();
 
   const [cameraPermissionInformation, requestPermission] =
     useCameraPermissions();
 
-  async function verifyPermissions() {
-    if (!cameraPermissionInformation) {
-      return false;
-    }
-
-    if (cameraPermissionInformation.status === PermissionStatus.UNDETERMINED) {
-      const permissionResponse = await requestPermission();
-      return permissionResponse.granted;
-    }
-
-    if (cameraPermissionInformation.status === PermissionStatus.DENIED) {
-      const permissionResponse = await requestPermission();
-      if (!permissionResponse.granted) {
-        Alert.alert(
-          "Insufficient Permission !",
-          "You need to grant camera permissions to use this app.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
-          ]
-        );
+  async function verifyPermissions(): Promise<boolean> {
+    try {
+      if (!cameraPermissionInformation) {
         return false;
       }
-    }
 
-    return true;
+      if (
+        cameraPermissionInformation.status === PermissionStatus.UNDETERMINED
+      ) {
+        const permissionResponse = await requestPermission();
+        return permissionResponse.granted;
+      }
+
+      if (cameraPermissionInformation.status === PermissionStatus.DENIED) {
+        const permissionResponse = await requestPermission();
+        if (!permissionResponse.granted) {
+          Alert.alert(
+            "Insufficient Permission !",
+            "You need to grant camera permissions to use this app.",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Open Settings",
+                onPress: () => {
+                  Linking.openSettings();
+                },
+              },
+            ]
+          );
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      Alert.alert(`Lỗi: ${error}`);
+      return false;
+    }
   }
 
-  async function takeImageHandler() {
+  async function takeImageHandler(): Promise<void> {
     const hasPermission = await verifyPermissions();
     if (!hasPermission) {
       return;
@@ -52,6 +67,12 @@ function ImagePicker({ onTakenImage }) {
       aspect: [16, 9],
       quality: 0.5,
     });
+
+    if (image.canceled || !image.assets || image.assets.length == 0) {
+      Alert.alert("No image capture");
+      return;
+    }
+
     setPickedImage(image.assets[0].uri);
     onTakenImage(image.assets[0].uri);
   }

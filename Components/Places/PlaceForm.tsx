@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,28 +14,62 @@ import ImagePicker from "./ImagePicker";
 import LocationPicker from "./LocationPicker";
 import Button from "../UI/Button";
 
-function PlaceForm({ onCreateMemory }) {
-  const [enteredTitle, setEnteredTitle] = useState("");
-  const [selectedImage, setSelectedImage] = useState();
-  const [pickedLocation, setPickedLocation] = useState();
-  const [isLoading, setIsLoading] = useState(false);
+interface Location {
+  lat: number;
+  lng: number;
+  address: string;
+}
 
-  function changeTitleHandler(enteredText) {
+interface OnCreateMemoryProps {
+  readonly onCreateMemory: (memoryData: Memory) => void;
+}
+
+function PlaceForm({ onCreateMemory }: OnCreateMemoryProps) {
+  const [enteredTitle, setEnteredTitle] = useState<string>("");
+  const [selectedImage, setSelectedImage] = useState<string>("");
+  const [pickedLocation, setPickedLocation] = useState<Location>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  function changeTitleHandler(enteredText: string): void {
     setEnteredTitle(enteredText);
   }
 
-  function takeImageHandler(imageUri) {
+  function takeImageHandler(imageUri: string): void {
     setSelectedImage(imageUri);
   }
 
-  const pickLocationHandler = useCallback((location) => {
-    setPickedLocation(location);
-  }, []);
+  const pickLocationHandler = useCallback(
+    (location: { lat: number; lng: number }, address: string) => {
+      setPickedLocation({
+        lat: location.lat,
+        lng: location.lng,
+        address: address,
+      });
+    },
+    []
+  );
 
-  function savePlaceHandler() {
+  function savePlaceHandler(): void {
+    if (!enteredTitle.trim() || !selectedImage || !pickedLocation) {
+      console.log("Please complete all fields!");
+      return;
+    }
+
     setIsLoading(true);
 
-    const memoryData = new Memory(enteredTitle, selectedImage, pickedLocation);
+    const id = Math.random().toString();
+
+    const memoryData = new Memory(
+      enteredTitle,
+      selectedImage,
+      {
+        latitude: pickedLocation.lat,
+        longitude: pickedLocation.lng,
+        address: pickedLocation.address,
+      },
+      id
+    );
+
     onCreateMemory(memoryData);
 
     setIsLoading(false);

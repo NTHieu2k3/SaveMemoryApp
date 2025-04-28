@@ -2,12 +2,22 @@ import * as SQLite from "expo-sqlite";
 
 import { Memory } from "../Models/memory";
 
-export async function openDatabase() {
+interface MemoryRow {
+  id: string;
+  title: string;
+  imageUri: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
   try {
     const db = await SQLite.openDatabaseAsync("memory.db");
     return db;
-  } catch (error) {
-    console.log("Lỗi: ", error);
+  } catch (error: any) {
+    console.log("Lỗi: ", error.message);
+    throw new Error("Không thể mở Database");
   }
 }
 
@@ -25,13 +35,13 @@ export async function init() {
       )
     `);
     return Promise.resolve();
-  } catch (error) {
-    return Promise.reject(new Error("Lỗi: ", error));
+  } catch (error: any) {
+    return Promise.reject(new Error("Lỗi: ", error.message));
   }
 }
 
 // Chèn một memory vào database
-export async function insertMemory(memory) {
+export async function insertMemory(memory: Memory): Promise<void> {
   const db = await openDatabase();
   try {
     // Sử dụng runAsync để thực hiện câu lệnh chèn dữ liệu
@@ -46,15 +56,15 @@ export async function insertMemory(memory) {
       ]
     );
     return Promise.resolve();
-  } catch (error) {
-    return Promise.reject(new Error("Lỗi: ", error));
+  } catch (error: any) {
+    return Promise.reject(new Error("Lỗi: ", error.message));
   }
 }
 
 export async function fetchMemories() {
   const db = await openDatabase();
   try {
-    const result = await db.getAllAsync("SELECT * FROM memories");
+    const result = await db.getAllAsync<MemoryRow>("SELECT * FROM memories");
     const memories = result.map((item) => {
       return new Memory(
         item.title,
@@ -68,7 +78,7 @@ export async function fetchMemories() {
       );
     });
     return memories;
-  } catch (error) {
+  } catch (error: any) {
     console.log("Lỗi khi lấy dữ liệu memories:", error);
     return Promise.reject(
       new Error("Lỗi khi lấy dữ liệu memories: " + error.message)
@@ -76,13 +86,14 @@ export async function fetchMemories() {
   }
 }
 
-export async function fetchMemoryDetail(id) {
+export async function fetchMemoryDetail(id: string) {
   const db = await openDatabase();
-
   try {
-    const result = await db.getAllAsync("SELECT * FROM memories WHERE id = ?", [
-      id,
-    ]);
+    const result = await db.getAllAsync<MemoryRow>(
+      "SELECT * FROM memories WHERE id = ?",
+      [id]
+    );
+
     console.log(result);
     const memory = new Memory(
       result[0].title,
@@ -97,7 +108,7 @@ export async function fetchMemoryDetail(id) {
 
     console.log(memory);
     return memory;
-  } catch (error) {
+  } catch (error: any) {
     console.log("Lỗi khi lấy dữ liệu memory:", error);
     return Promise.reject(
       new Error("Lỗi khi lấy dữ liệu memory: " + error.message)
@@ -105,12 +116,12 @@ export async function fetchMemoryDetail(id) {
   }
 }
 
-export async function deleteMemory(id) {
+export async function deleteMemory(id: string) {
   const db = await openDatabase();
   try {
     await db.runAsync(`DELETE FROM memories WHERE id = ?`, [id]);
     return Promise.resolve();
-  } catch (error) {
+  } catch (error: any) {
     return Promise.reject(new Error("Lỗi khi xóa memory: " + error.message));
   }
 }

@@ -13,10 +13,22 @@ import { useEffect, useState } from "react";
 import { deleteMemory, fetchMemoryDetail } from "../utill/database";
 import MapView, { Marker } from "react-native-maps";
 import IconButton from "../Components/UI/IconButton";
+import { RouteProp } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Memory } from "../Models/memory";
 
-function PlaceDetails({ route, navigation }) {
-  const [fetchedMemory, setFetchedMemory] = useState();
-  const [modalVisible, setModalVisible] = useState(false);
+type StackParamList = {
+  PlaceDetails: { memoryId: string };
+};
+
+interface PlaceDetailProps {
+  readonly route: RouteProp<StackParamList>;
+  readonly navigation: NativeStackNavigationProp<StackParamList>;
+}
+
+function PlaceDetails({ route, navigation }: PlaceDetailProps) {
+  const [fetchedMemory, setFetchedMemory] = useState<Memory>();
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const selectedMemoryId = route.params.memoryId;
 
@@ -40,6 +52,21 @@ function PlaceDetails({ route, navigation }) {
     setModalVisible(false);
   }
 
+  async function dlt(): Promise<void> {
+    if (!fetchedMemory) {
+      Alert.alert("Lỗi !");
+      return;
+    }
+    try {
+      await deleteMemory(fetchedMemory.id);
+      Alert.alert("Xóa thành công");
+      navigation.goBack();
+    } catch (error) {
+      console.log("Lỗi khi xóa memory:", error);
+      Alert.alert("Lỗi", "Không thể xóa memory. Vui lòng thử lại.");
+    }
+  }
+
   async function deleteHandler() {
     Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa memory này?", [
       {
@@ -48,15 +75,8 @@ function PlaceDetails({ route, navigation }) {
       },
       {
         text: "Xóa",
-        onPress: async () => {
-          try {
-            await deleteMemory(fetchedMemory.id);
-            Alert.alert("Xóa thành công");
-            navigation.goBack();
-          } catch (error) {
-            console.log("Lỗi khi xóa memory:", error);
-            Alert.alert("Lỗi", "Không thể xóa memory. Vui lòng thử lại.");
-          }
+        onPress: () => {
+          dlt();
         },
       },
     ]);

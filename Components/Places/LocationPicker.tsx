@@ -1,25 +1,47 @@
-import { ActivityIndicator, Alert, Linking, Modal, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Linking,
+  Modal,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Colors } from "../../constants/colors";
 import {
   getCurrentPositionAsync,
   PermissionStatus,
   useForegroundPermissions,
 } from "expo-location";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Region, MapPressEvent } from "react-native-maps";
 import OutlineButton from "../UI/OutlineButton";
 import { useState, useEffect } from "react";
 import { getAddress } from "../../utill/location";
 
-function LocationPicker({ onPickLocation }) {
+interface Location {
+  lat: number;
+  lng: number;
+}
+
+interface OnPickLocationProps {
+  readonly onPickLocation: (Location: Location, address: string) => void;
+}
+
+interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
+function LocationPicker({ onPickLocation }: OnPickLocationProps) {
   const [locationPermissionInformation, requestPermission] =
     useForegroundPermissions();
 
-  const [pickedLocation, setPickedLocation] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [region, setRegion] = useState(null);
-  const [locationSource, setLocationSource] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [pickedLocation, setPickedLocation] = useState<Coordinate | null>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [selectedLocation, setSelectedLocation] = useState<Coordinate | null>(null);
+  const [region, setRegion] = useState<Region | null>(null);
+  const [locationSource, setLocationSource] = useState<"GPS" | "MAP" | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (pickedLocation) {
@@ -41,13 +63,13 @@ function LocationPicker({ onPickLocation }) {
           pickedLocation.longitude
         );
         setIsLoading(false);
-        onPickLocation({ ...pickedLocation, address: address });
+        onPickLocation({ lat: pickedLocation.latitude, lng: pickedLocation.longitude }, address);
       }
     }
     handlerLocation();
   }, [pickedLocation, onPickLocation]);
 
-  async function verifyPermissions() {
+  async function verifyPermissions() :Promise<boolean> {
     if (!locationPermissionInformation) return false;
 
     if (
@@ -65,7 +87,7 @@ function LocationPicker({ onPickLocation }) {
           "You need to grant location permissions to use this app.",
           [
             { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
+            { text: "Open Settings", onPress: () => {Linking.openSettings()} },
           ]
         );
         return false;
@@ -75,7 +97,7 @@ function LocationPicker({ onPickLocation }) {
     return true;
   }
 
-  async function getLocationHandler() {
+  async function getLocationHandler(): Promise<void> {
     const hasPermission = await verifyPermissions();
     if (!hasPermission) return;
 
@@ -87,7 +109,7 @@ function LocationPicker({ onPickLocation }) {
     setLocationSource("GPS");
   }
 
-  async function pickOnMapHandler() {
+  async function pickOnMapHandler(): Promise<void> {
     let defaultLocation = pickedLocation;
 
     if (!defaultLocation) {
@@ -107,12 +129,12 @@ function LocationPicker({ onPickLocation }) {
     setModalVisible(true);
   }
 
-  function handleMapPress(event) {
+  function handleMapPress(event: MapPressEvent): void {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     setSelectedLocation({ latitude, longitude });
   }
 
-  function confirmLocationHandler() {
+  function confirmLocationHandler(): void {
     setPickedLocation(selectedLocation);
     setModalVisible(false);
     setLocationSource("MAP");
